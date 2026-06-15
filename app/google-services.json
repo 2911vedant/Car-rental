@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "989701219347",
+    "project_id": "carnow-4a0da",
+    "storage_bucket": "carnow-4a0da.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:989701219347:android:24b2a4ea0f11e482d18be6",
+        "android_client_info": {
+          "package_name": "com.example.carnow"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBm2_gZUh9rn2U28hAj3vBC6Sj1X0pdoM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F4F6F6"
+    tools:context=".HomeActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tv_welcome_user"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hello, User! Start Your Renting."
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#1F618D"
+            android:layout_marginBottom="24dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Available Cars"
+            android:textSize="20sp"
+            android:textStyle="italic"
+            android:textColor="#566573"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Simplified Car List (Add more as needed) -->
+        <LinearLayout
+            style="@style/CarCard"
+            android:orientation="vertical"
+            android:layout_marginBottom="12dp">
+            <TextView android:text="Luxury Sedan" style="@style/CarTitle" />
+            <TextView android:text="Rate: $80/day" style="@style/CarDetail" />
+            <Button android:text="Rent Now" style="@style/RentButton" />
+        </LinearLayout>
+
+        <LinearLayout
+            style="@style/CarCard"
+            android:orientation="vertical"
+            android:layout_marginBottom="32dp">
+            <TextView android:text="Compact SUV" style="@style/CarTitle" />
+            <TextView android:text="Rate: $50/day" style="@style/CarDetail" />
+            <Button android:text="Rent Now" style="@style/RentButton" />
+        </LinearLayout>
+
+
+        <!-- Password Change Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Change Password"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#C0392B"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"/>
+
+        <EditText
+            android:id="@+id/et_change_password_current"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Current Password"
+            android:inputType="textPassword"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp"/>
+
+        <EditText
+            android:id="@+id/et_change_password_new"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="New Password"
+            android:inputType="textPassword"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp"/>
+
+        <EditText
+            android:id="@+id/et_change_password_confirm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Confirm New Password"
+            android:inputType="textPassword"
+            android:padding="12dp"
+            android:layout_marginBottom="24dp"/>
+
+        <Button
+            android:id="@+id/btn_change_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Update Password"
+            android:padding="14dp"
+            android:backgroundTint="#C0392B"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"/>
+
+        <Button
+            android:id="@+id/btn_logout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Log Out"
+            android:layout_marginTop="32dp"
+            android:padding="14dp"
+            android:backgroundTint="#99A3A4"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"/>
+
+    </LinearLayout>
+</ScrollView>
+
+    <!-- Define simple styles in res/values/styles.xml (not included here, using inline attributes for this example) -->
+    <!-- Mocking styles for cleaner layout: -->
+    <!-- In a real project, you would define these in res/values/themes.xml or styles.xml -->
+    <!-- For this single file demonstration, we use inline attributes. -->

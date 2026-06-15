@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">CARNOW</string>
+    <string name="splash_text">Unlock Your Next Ride</string>
+    <string name="welcome_back">Welcome Back!</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Password</string>
+    <string name="login_button">Log In</string>
+    <string name="signup_prompt">New user? Sign up here</string>
+
+</resources>
