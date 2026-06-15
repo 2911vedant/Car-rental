@@ -1,0 +1,252 @@
+Index: app/src/main/java/com/example/carnow/SQLiteDatabaseHelper.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/carnow/SQLiteDatabaseHelper.kt b/app/src/main/java/com/example/carnow/SQLiteDatabaseHelper.kt
+--- a/app/src/main/java/com/example/carnow/SQLiteDatabaseHelper.kt
++++ b/app/src/main/java/com/example/carnow/SQLiteDatabaseHelper.kt	(date 1760618148113)
+@@ -5,137 +5,166 @@
+ import android.database.sqlite.SQLiteDatabase
+ import android.database.sqlite.SQLiteOpenHelper
+ import android.util.Log
++import java.lang.Exception
+ 
+ // Database constants
+ private const val DATABASE_NAME = "CarRentalDB"
+-private const val DATABASE_VERSION = 2 // <--- IMPORTANT: Increment the version for schema change
++private const val DATABASE_VERSION = 3 // <--- INCREMENTED to include the bookings table
+ 
+-// User table constants
++// --- User table constants ---
+ private const val TABLE_USERS = "users"
+ private const val COLUMN_ID = "id"
+ private const val COLUMN_EMAIL = "email"
+ private const val COLUMN_PASSWORD = "password"
+-// New Columns
+ private const val COLUMN_NAME = "name"
+ private const val COLUMN_PHONE = "phone"
+ private const val COLUMN_LICENSE = "license"
++// Assuming you have a UserDetails data class
++data class UserDetails(val name: String, val phone: String, val license: String
++
++// --- Booking table constants (NEW) ---
++private const val TABLE_BOOKINGS = "bookings"
++private const val COLUMN_BOOKING_ID = "booking_id"
++private const val COLUMN_USER_EMAIL_FK = "user_email"
++private const val COLUMN_CAR_NAME = "car_name" // Renamed from model for clarity with Booking.kt
++private const val COLUMN_CAR_IMAGE_ID = "car_image_id"
++private const val COLUMN_PICKUP_DETAILS = "pickup_details"
++private const val COLUMN_DROPOFF_DETAILS = "dropoff_details"
++private const val COLUMN_TOTAL_RENT = "total_rent"
++private const val COLUMN_TOTAL_DAYS = "total_days"
++private const val COLUMN_STATUS = "status"
+ 
+ class SQLiteDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+ 
+-    // SQL query to create the users table with new columns
++    // SQL query to create the users table
+     private val CREATE_USERS_TABLE = ("CREATE TABLE " + TABLE_USERS + "("
+             + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+             + COLUMN_EMAIL + " TEXT UNIQUE,"
+             + COLUMN_PASSWORD + " TEXT,"
+-            + COLUMN_NAME + " TEXT,"      // New
+-            + COLUMN_PHONE + " TEXT,"     // New
+-            + COLUMN_LICENSE + " TEXT"    // New
++            + COLUMN_NAME + " TEXT,"
++            + COLUMN_PHONE + " TEXT,"
++            + COLUMN_LICENSE + " TEXT"
++            + ")")
++
++    // SQL query to create the bookings table (NEW)
++    private val CREATE_BOOKINGS_TABLE = ("CREATE TABLE " + TABLE_BOOKINGS + "("
++            + COLUMN_BOOKING_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
++            + COLUMN_USER_EMAIL_FK + " TEXT NOT NULL,"
++            + COLUMN_CAR_NAME + " TEXT NOT NULL,"
++            + COLUMN_CAR_IMAGE_ID + " INTEGER NOT NULL," // Store drawable resource ID
++            + COLUMN_PICKUP_DETAILS + " TEXT NOT NULL,"
++            + COLUMN_DROPOFF_DETAILS + " TEXT NOT NULL,"
++            + COLUMN_TOTAL_RENT + " INTEGER NOT NULL," // Use INTEGER for Long in SQLite
++            + COLUMN_TOTAL_DAYS + " INTEGER NOT NULL,"
++            + COLUMN_STATUS + " TEXT NOT NULL DEFAULT '${BookingStatus.CONFIRMED}',"
++            + "FOREIGN KEY(" + COLUMN_USER_EMAIL_FK + ") REFERENCES " + TABLE_USERS + "(" + COLUMN_EMAIL + ") ON DELETE CASCADE"
+             + ")")
+ 
+     override fun onCreate(db: SQLiteDatabase) {
+         db.execSQL(CREATE_USERS_TABLE)
+-        Log.d("DB", "Users table created successfully.")
++        db.execSQL(CREATE_BOOKINGS_TABLE)
++        Log.d("DB", "Users and Bookings tables created successfully.")
+     }
+ 
+     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+-        // Drop older table if exists and re-create
++        // Drop all tables if version is incremented
++        db.execSQL("DROP TABLE IF EXISTS $TABLE_BOOKINGS")
+         db.execSQL("DROP TABLE IF EXISTS $TABLE_USERS")
+         onCreate(db)
+     }
+ 
++    // --- User Management Methods (Existing) ---
++    // (addUser, checkUser, updatePassword, getUserDetails remain the same)
++
++    // --- Booking Management Methods (NEW) ---
++
+     /**
+-     * Inserts a new user into the database, including all profile details.
+-     * NOTE: This assumes you are collecting all these details during registration.
++     * Inserts a new car booking into the database.
++     * Use this when a user confirms a booking.
+      */
+-    fun addUser(email: String, passwordHash: String, name: String, phone: String, license: String): Boolean {
++    fun addBooking(
++        userEmail: String,
++        carName: String,
++        carImageResId: Int,
++        pickupDetails: String,
++        dropOffDetails: String,
++        totalRent: Long,
++        totalDays: Long,
++        status: BookingStatus = BookingStatus.CONFIRMED
++    ): Boolean {
+         val db = this.writableDatabase
+         val values = ContentValues().apply {
+-            put(COLUMN_EMAIL, email)
+-            put(COLUMN_PASSWORD, passwordHash)
+-            put(COLUMN_NAME, name)
+-            put(COLUMN_PHONE, phone)
+-            put(COLUMN_LICENSE, license)
++            put(COLUMN_USER_EMAIL_FK, userEmail)
++            put(COLUMN_CAR_NAME, carName)
++            put(COLUMN_CAR_IMAGE_ID, carImageResId)
++            put(COLUMN_PICKUP_DETAILS, pickupDetails)
++            put(COLUMN_DROPOFF_DETAILS, dropOffDetails)
++            put(COLUMN_TOTAL_RENT, totalRent)
++            put(COLUMN_TOTAL_DAYS, totalDays)
++            put(COLUMN_STATUS, status.name)
+         }
+-        val result = db.insert(TABLE_USERS, null, values)
++        val result = db.insert(TABLE_BOOKINGS, null, values)
+         db.close()
+         return result != -1L
+     }
+ 
+     /**
+-     * Checks if a user exists with the given email and password.
++     * Retrieves all bookings for a specific user email.
+      */
+-    fun checkUser(email: String, passwordHash: String): Boolean {
++    fun getUserBookings(userEmail: String): List<Booking> {
++        val bookingList = mutableListOf<Booking>()
+         val db = this.readableDatabase
+-        val selection = "$COLUMN_EMAIL = ? AND $COLUMN_PASSWORD = ?"
+-        val selectionArgs = arrayOf(email, passwordHash)
++
++        val selection = "$COLUMN_USER_EMAIL_FK = ?"
++        val selectionArgs = arrayOf(userEmail)
+ 
+-        val cursor = db.query(
+-            TABLE_USERS,
+-            arrayOf(COLUMN_ID),
+-            selection,
+-            selectionArgs,
+-            null, null, null
+-        )
+-
+-        val userExists = cursor.count > 0
++        val cursor = db.query(TABLE_BOOKINGS, null, selection, selectionArgs, null, null, null)
++
++        if (cursor.moveToFirst()) {
++            do {
++                try {
++                    val booking = Booking(
++                        bookingId = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_BOOKING_ID)),
++                        userEmail = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_USER_EMAIL_FK)),
++                        carName = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CAR_NAME)),
++                        carImageResId = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CAR_IMAGE_ID)),
++                        pickupDetails = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PICKUP_DETAILS)),
++                        dropOffDetails = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DROPOFF_DETAILS)),
++                        totalRent = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_TOTAL_RENT)),
++                        totalDays = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_TOTAL_DAYS)),
++                        status = BookingStatus.valueOf(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_STATUS)))
++                    )
++                    bookingList.add(booking)
++                } catch (e: Exception) {
++                    Log.e("DBHelper", "Error reading booking row: ${e.message}")
++                }
++            } while (cursor.moveToNext())
++        }
+         cursor.close()
+         db.close()
+-        return userExists
++        return bookingList
+     }
+ 
+     /**
+-     * Updates the password for a given user email.
++     * Updates the status of a specific booking to 'CANCELLED'.
+      */
+-    fun updatePassword(email: String, newPasswordHash: String): Boolean {
++    fun cancelBooking(bookingId: Int): Boolean {
+         val db = this.writableDatabase
+         val values = ContentValues().apply {
+-            put(COLUMN_PASSWORD, newPasswordHash)
++            put(COLUMN_STATUS, BookingStatus.CANCELLED.name)
+         }
+ 
+-        val selection = "$COLUMN_EMAIL = ?"
+-        val selectionArgs = arrayOf(email)
++        // Use booking ID to find and update the correct row
++        val selection = "$COLUMN_BOOKING_ID = ?"
++        val selectionArgs = arrayOf(bookingId.toString())
+ 
+-        val count = db.update(TABLE_USERS, values, selection, selectionArgs)
++        val count = db.update(TABLE_BOOKINGS, values, selection, selectionArgs)
+         db.close()
++
+         return count > 0
+     }
+ 
+-    /**
+-     * Retrieves Name, Phone, and Driving License for a given email.
+-     * @return UserDetails object or null if user not found.
+-     */
+-    fun getUserDetails(email: String): UserDetails? {
+-        val db = this.readableDatabase
+-        var userDetails: UserDetails? = null
+-
+-        val projection = arrayOf(COLUMN_NAME, COLUMN_PHONE, COLUMN_LICENSE)
+-        val selection = "$COLUMN_EMAIL = ?"
+-        val selectionArgs = arrayOf(email)
+-
+-        val cursor = db.query(
+-            TABLE_USERS,
+-            projection,
+-            selection,
+-            selectionArgs,
+-            null, null, null
+-        )
+-
+-        if (cursor.moveToFirst()) {
+-            val nameIndex = cursor.getColumnIndex(COLUMN_NAME)
+-            val phoneIndex = cursor.getColumnIndex(COLUMN_PHONE)
+-            val licenseIndex = cursor.getColumnIndex(COLUMN_LICENSE)
+-
+-            // Check if column indices are valid before reading
+-            if (nameIndex >= 0 && phoneIndex >= 0 && licenseIndex >= 0) {
+-                userDetails = UserDetails(
+-                    name = cursor.getString(nameIndex),
+-                    phone = cursor.getString(phoneIndex),
+-                    license = cursor.getString(licenseIndex)
+-                )
+-            }
+-        }
+-        cursor.close()
+-        db.close()
+-        return userDetails
+-    }
++    // ... (Existing User Management Methods like checkUser, updatePassword, getUserDetails)
++    // NOTE: You must include the existing user methods in your file,
++    // which were present in your original code.
+ }
+\ No newline at end of file
